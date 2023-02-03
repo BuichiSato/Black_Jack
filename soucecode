@@ -1,0 +1,188 @@
+import random
+
+def drow(x, y):
+    mark = ['♠', '♣', '♥', '♦']
+    num = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+    return mark[x] + num[y]
+
+def check(card, drow_card):
+    for num in range(len(drow_card)):
+        if card != drow_card[num]:
+            next_turn = True
+        else:
+            next_turn = False
+            break
+    return next_turn
+
+print('BlackJackを始めます！')
+playing = True
+win = 0
+lose = 0
+coin = 20
+
+while playing:
+    p_score = 0   #プレーヤーの得点
+    d_score = 0 #ディーラー(相手)の得点
+    player_card = list()  #プレイヤーが引いたカードをリスト化
+    dealer_card = list()    #ディーラーの引いたカードをリスト化、必要ないかも
+    drow_card = list()  #山札から引いたすべてのカードをリスト化
+    count = 0   #山札から引いたカードの枚数
+    ace = False #Aを引いたかどうかのフラグ
+    command = 0 #選択肢を管理する変数
+
+    print('コイン所持数:{}'.format(coin))
+    while True:
+        bet_coin = int(input('コインを何枚賭けますか？>> '))
+        if bet_coin > coin:
+            print('金額が大きすぎます(コイン所持数:{})'.format(coin))
+        elif bet_coin < 1:
+            print('1以上の整数を入力してください：所持コイン{}'.format(coin))
+        else:
+            break
+
+    print('カードを2枚配ります')
+    #カードを引く処理
+    #1枚目-------------------------------
+    x = random.randint(0, 3)
+    y = random.randint(0, 12)
+    card = drow(x, y)
+    player_card.append(card)
+    drow_card.append(card)
+
+    point = y + 1
+    if point > 10:  #J,Q,Kの処理
+        point = 10
+    if point == 1 and p_score <= 11:  #Aを引いた時の対応
+        ace = True
+        point += 10
+    p_score += point
+    count += 1
+
+    #2枚目-----------------------------
+    while len(drow_card) == count:
+        x = random.randint(0, 3)
+        y = random.randint(0, 12)
+        card = drow(x, y)
+
+        if check(card, drow_card):
+            player_card.append(card)
+            drow_card.append(card)
+            point = y + 1 #点数の是正
+            if point > 10: #J,Q,Kの処理
+                point = 10
+            if point == 1 and p_score <= 11: #Aを引いた時の対応
+                ace = True
+                point += 10
+            p_score += point
+            if ace and p_score > 21: #バーストしたけどAを持っていた時
+                ace = False
+                p_score -= 10
+    count += 1 #手札2枚目を引いた処理完了
+    print('PLAYERの手札{}'.format(player_card))
+    print('PLAYERのスコアは*{}*です'.format(p_score))
+
+    while command != 2 and p_score <= 21:
+        command = int(input('選択してください 1:カードを引く 2:勝負する 3:手札を確認 >> '))
+        if command == 1:
+            #カードを引く処理
+            while len(drow_card) == count:
+                x = random.randint(0, 3)
+                y = random.randint(0, 12)
+                card = drow(x, y)
+
+                if check(card, drow_card):
+                    player_card.append(card)
+                    drow_card.append(card)
+                    point = y + 1  # 点数の是正
+                    if point > 10:  # J,Q,Kの処理
+                        point = 10
+                    if point == 1 and p_score <= 11:  # Aを引いた時の対応
+                        ace = True
+                        point += 10
+                    p_score += point
+                    if ace and p_score > 21:  # バーストしたけどAを持っていた時
+                        ace = False
+                        p_score -= 10
+            count += 1  # 手札x枚目を引いた処理完了
+            print('{}を引きました'.format(card))
+            if p_score <= 21:
+                print('PLAYERのスコアは*{}*です'.format(p_score))
+            elif p_score > 21:
+                print('*{}*なのでバーストしました'.format(p_score))
+
+        elif command == 2:
+            #ディーラーのカード
+            ace = False
+            while d_score < 17:
+                while len(drow_card) == count:
+                    x = random.randint(0, 3)
+                    y = random.randint(0, 12)
+                    card = drow(x, y)
+
+                    if check(card, drow_card):
+                        dealer_card.append(card)
+                        drow_card.append(card)
+                        point = y + 1  # 点数の是正
+                        if point > 10:  # J,Q,Kの処理
+                            point = 10
+                        if point == 1 and d_score <= 11:  # Aを引いた時の対応
+                            ace = True
+                            point += 10
+                        d_score += point
+                        if ace and d_score > 21:  # バーストしたけどAを持っていた時
+                            ace = False
+                            d_score -= 10
+                count += 1  # x枚目を引いた処理完了
+            print('DEALERのカード{}'.format(dealer_card))
+            if d_score > 21:
+                print('*{}*なのでバーストしました'.format(d_score))
+            else:
+                print('DEALERのスコアは*{}*です'.format(d_score))
+            #勝敗判定へ
+
+        elif command == 3:
+            print('PLAYERの手札{}'.format(player_card))
+            print('スコア:*{}*'.format(p_score))
+            print('賭けたコイン:{}'.format(bet_coin))
+        elif command > 3:
+            print('1～3の整数を入力してください')
+
+    if p_score > 21:
+        print('あなたの負けです・・・残念')
+        lose += 1
+        coin -= bet_coin
+    elif d_score > 21:
+        print('あなたの勝ちです！おめでとう！')
+        win += 1
+        coin += bet_coin
+    elif p_score < d_score:
+        print('PLAYER * {} * VS * {} * DEALER'.format(p_score, d_score))
+        print('あなたの負けです・・・残念')
+        lose += 1
+        coin -= bet_coin
+    elif p_score > d_score:
+        print('PLAYER *{}* VS *{}* DEALER'.format(p_score, d_score))
+        print('あなたの勝ちです！おめでとう！')
+        win += 1
+        coin += bet_coin
+    elif p_score == d_score:
+        print('PLAYER * {} * VS * {} * DEALER'.format(p_score, d_score))
+        print('引き分けです')
+
+    print('あなたの成績 WIN：{} LOSE：{}'.format(win, lose))
+
+    if coin == 0:
+        print('コインがなくなりました・・・')
+        print('また遊んでね！')
+        break
+    finish = input('ゲームを続けますか？ (y/n) >> ')
+    if finish == 'n':
+        print('ゲームを終了します')
+        print('最終コイン数は{}です'.format(coin))
+        playing = False
+    else:
+        print('-----------------------------------------------------')
+
+print('Thank you for playing!!')
+
+
